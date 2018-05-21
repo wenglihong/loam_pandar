@@ -14,6 +14,11 @@ find_package(catkin REQUIRED COMPONENTS
         mrpt_bridge
         mrpt_map
         mrpt_msgs
+
+#        tf2
+#        tf2_ros
+#        tf2_msgs
+#        tf2_sensor_msg
 )
 
 #find_package(Eigen3 REQUIRED)
@@ -21,9 +26,13 @@ find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(MRPT REQUIRED base slam gui opengl maps obs nav)
 
+generate_dynamic_reconfigure_options(
+        cfg/calibration.cfg
+)
+
 include_directories(
   include
-	${catkin_INCLUDE_DIRS} 
+	${catkin_INCLUDE_DIRS}
 #	${EIGEN3_INCLUDE_DIR}
 	${PCL_INCLUDE_DIRS}
     ${mrpt_INCLUDE_DIRS}
@@ -50,6 +59,18 @@ target_link_libraries(transformMaintenance ${catkin_LIBRARIES} ${PCL_LIBRARIES} 
 
 add_executable(saveMap src/saveMap.cpp)
 target_link_libraries(saveMap ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${MRPT_LIBS})
+
+add_executable(toBaseLink src/toBaseLink.cpp)
+target_link_libraries(toBaseLink ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(saveTraj src/saveTraj.cpp)
+target_link_libraries(saveTraj ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(calibTraj src/calibTraj.cpp)
+target_link_libraries(calibTraj ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(featureExtraction src/featureExtraction.cpp)
+target_link_libraries(featureExtraction ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 if (CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)

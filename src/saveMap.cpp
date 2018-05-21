@@ -34,6 +34,7 @@ int frame_id=0;
 int id=0;
 pcl::PointCloud<PointType>::Ptr Map(new pcl::PointCloud<PointType>());
 pcl::PointCloud<PointType>::Ptr laserCloud2(new pcl::PointCloud<PointType>());
+pcl::PointCloud<PointType>::Ptr laserCloudIn(new pcl::PointCloud<PointType>());
 Eigen::Matrix4f before_node = Eigen::Matrix4f::Identity();
 Eigen::Matrix4f change_node = Eigen::Matrix4f::Identity();
 std::ofstream node;
@@ -100,7 +101,18 @@ void odomHandler(const nav_msgs::Odometry::ConstPtr &laserodom)
 
 void mapHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloud)
 {
-    pcl::fromROSMsg(*laserCloud, *laserCloud2);
+    pcl::fromROSMsg(*laserCloud, *laserCloudIn);
+
+    for(int i=0; i<laserCloudIn->points.size(); ++i){
+        PointType point;
+        point.x = laserCloudIn->points[i].z;
+        point.y = laserCloudIn->points[i].x;
+        point.z = laserCloudIn->points[i].y;
+
+        if(point.z>0.2)
+            laserCloud2->points.push_back(point);
+    }
+
     pcl::transformPointCloud(*laserCloud2,*laserCloud2,change_node);
     before_node = Eigen::Matrix4f::Identity();
     change_node = Eigen::Matrix4f::Identity();
@@ -108,7 +120,7 @@ void mapHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloud)
     frame_id++;
     laserCloud2->clear();
 
-    int temp = 100;
+    int temp = 80;
     if(frame_id==temp+temp*id)
     {
         //ros::waitForShutdown();
@@ -124,7 +136,7 @@ void mapHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloud)
         stringstream ss;
         ss<<i;
 
-        string s1="/home/wlh/cloud_map/20180519/loam/";
+        string s1="/home/wlh/cloud_map/20180520/";
         string s2 = ss.str();
         string s3=".ply";
         std::string filename=s1+s2+s3;
@@ -149,6 +161,7 @@ void fix_odom_first_callback(const nav_msgs::Odometry::ConstPtr &FixOdomFirstIn)
     change_node(2,3)= 0;
 }
 
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "saveMap");
@@ -158,7 +171,7 @@ int main(int argc, char** argv)
 
 
     ros::Subscriber subLaserMap = nh.subscribe<sensor_msgs::PointCloud2>
-            ("/velodyne_cloud_registered", 5, mapHandler);
+            ("/feature_points", 5, mapHandler);
 
 //    ros::Subscriber subLaserOdometry = nh.subscribe<nav_msgs::Odometry>
 //            ("/aft_mapped_to_init", 5, odomHandler);
